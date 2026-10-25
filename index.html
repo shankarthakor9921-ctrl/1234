@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antivirus AI Web Suite</title>
+    <style>
+        :root {
+            --sidebar-bg: #ffffff;
+            --main-bg: #ebf3fe;
+            --card-bg: #ffffff;
+            --primary-blue: #1b65f6;
+            --text-dark: #222b45;
+            --text-muted: #6b778c;
+            --border-color: #e2e8f0;
+            --green-success: #10b981;
+            --red-alert: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        body { background-color: var(--main-bg); color: var(--text-dark); height: 100vh; display: flex; overflow: hidden; }
+
+        sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 15px 0;
+            justify-content: space-between;
+        }
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px 20px 20px;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--text-dark);
+        }
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .nav-list { display: flex; flex-direction: column; gap: 4px; padding: 0 12px; overflow-y: auto; max-height: calc(100vh - 180px); }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 11px 16px;
+            color: var(--text-dark);
+            font-size: 0.93rem;
+            font-weight: 500;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .nav-item:hover { background-color: #f0f5ff; color: var(--primary-blue); }
+        .nav-item.active {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(27, 101, 246, 0.3);
+        }
+        
+        .sidebar-bottom { padding: 12px 16px; }
+        .student-badge-box {
+            background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+            border: 1px solid #bae6fd;
+            border-radius: 10px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            font-size: 0.76rem;
+            color: #0369a1;
+            font-weight: 600;
+        }
+        .protection-box {
+            background-color: #f7fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .prot-icon { color: var(--green-success); font-size: 1.3rem; }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 25px 35px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        .last-scan-badge {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .last-scan-badge strong { color: var(--green-success); }
+
+        .view-content { display: none; flex-direction: column; gap: 12px; }
+        .view-content.active { display: flex; }
+
+        .scan-title { font-size: 1.6rem; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
+        .scan-details { display: flex; gap: 20px; font-size: 0.86rem; color: var(--text-muted); margin-bottom: 4px; }
+        .file-path-stream { font-size: 0.8rem; color: var(--text-muted); font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 750px; margin-bottom: 8px; }
+
+        .progress-bar-bg { width: 100%; height: 5px; background: #d0e1fd; border-radius: 3px; overflow: hidden; margin-bottom: 15px; }
+        .progress-bar-fill { width: 0%; height: 100%; background: var(--primary-blue); transition: width 0.3s ease; }
+
+        .scan-items-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
+        .scan-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(226, 232, 240, 0.7);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .card-left { display: flex; align-items: center; gap: 15px; }
+        .item-icon { width: 34px; height: 34px; background: #f0f5ff; color: var(--primary-blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .item-name { font-weight: 600; font-size: 0.95rem; color: var(--text-dark); }
+        .item-status { font-size: 0.88rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        
+        .status-finish { color: var(--green-success); }
+
+        .btn-action {
+            background: #ffffff;
+            border: 1px solid var(--primary-blue);
+            color: var(--primary-blue);
+            padding: 8px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-action:hover { background: var(--primary-blue); color: #ffffff; }
+        .btn-completed { background: var(--green-success); border-color: var(--green-success); color: white; }
+
+        .content-panel {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .tool-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <sidebar>
+        <div>
+            <div class="brand-logo">
+                <div class="brand-icon">🛡️</div>
+                <span>Antivirus AI</span>
+            </div>
+            <div class="nav-list">
+                <div class="nav-item active" onclick="switchTab(0, this)">💻 Full Check</div>
+                <div class="nav-item" onclick="switchTab(1, this)">📈 Virus Scan</div>
+                <div class="nav-item" onclick="switchTab(2, this)">🚀 Speedup</div>
+                <div class="nav-item" onclick="switchTab(3, this)">🧹 Cleanup</div>
+                <div class="nav-item" onclick="switchTab(4, this)">🔒 Privacy</div>
+                <div class="nav-item" onclick="switchTab(5, this)">🔧 Tool Box</div>
+                <div class="nav-item" onclick="switchTab(6, this)">👤 Account</div>
+            </div>
+        </div>
+        <div class="sidebar-bottom">
+            <div class="student-badge-box">✨ Student Pro Active</div>
+            <div class="protection-box">
+                <span class="prot-icon">🛡️</span>
+                <div>
+                    <div style="font-size: 0.73rem; color: var(--text-muted);">Protection Status:</div>
+                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--green-success);">Enabled</div>
+                </div>
+            </div>
+        </div>
+    </sidebar>
+
+    <div class="main-container">
+        <div class="header-top">
+            <div class="last-scan-badge">🕒 Last scan: <strong id="lastScanDate">2026-10-25</strong></div>
+        </div>
+
+        <!-- 1. FULL CHECK -->
+        <div class="view-content active" id="view-0">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div class="scan-title" id="fullCheckTitle">Full System Check</div>
+                <button class="btn-action btn-blue" id="fullCheckActionBtn" onclick="runFullCheck()">Start Full Check</button>
+            </div>
+            <div class="scan-details">
+                <span>⏱️ <span id="fullTimer">00:00:00</span></span>
+                <span>📁 Scanned Files: <span id="fullScannedCount">0</span></span>
+            </div>
+            <div class="file-path-stream" id="fullFilePath">Ready to simulate live system check...</div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="fullProgressBar"></div></div>
+
+            <div class="scan-items-list">
+                <div class="scan-card"><div class="card-left"><div class="item-icon">🛡️</div><div class="item-name">Security Threat Check</div></div><div class="item-status" id="fc-status-0">Waiting...</div></div>
+                <div class="scan-card"><div class="card-left"><div class="item-icon">📈</div><div class="item-name">Performance Optimization</div></div><div class="item-status" id="fc-status-1">Waiting...</div></div>
+                <div class="scan-card"><div class="card-left"><div class="item-icon">⚡</div><div class="item-name">Bootup & Services Check</div></div><div class="item-status" id="fc-status-2">Waiting...</div></div>
+            </div>
+        </div>
+
+        <!-- 2. VIRUS SCAN -->
+        <div class="view-content" id="view-1">
+            <div class="scan-title">Virus Scan & Heuristics</div>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Simulate deep cloud & heuristic analysis on virtual web files.</p>
+            <button class="btn-action btn-blue" onclick="runVirusScan()" style="width: fit-content;">Start Quick Scan</button>
+            <div class="progress-bar-bg" style="margin-top: 15px;"><div class="progress-bar-fill" id="virusProgressBar"></div></div>
+            <div class="file-path-stream" id="virusFilePath">Status: Idle</div>
+        </div>
+
+        <!-- 3. SPEEDUP -->
+        <div class="view-content" id="view-2">
+            <div class="scan-title">Easy Speedup & RAM Reclaim</div>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Optimize browser memory and startup processes.</p>
+            <button class="btn-action btn-blue" onclick="runSpeedup()" style="width: fit-content;">Boost Performance</button>
+            <div class="progress-bar-bg" style="margin-top: 15px;"><div class="progress-bar-fill" id="speedupProgressBar"></div></div>
+        </div>
+
+        <!-- 4. CLEANUP -->
+        <div class="view-content" id="view-3">
+            <div class="scan-title">Web Cache & Junk Cleanup</div>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Clear local storage temporary files and browser caches.</p>
+            <button class="btn-action btn-blue" onclick="runCleanup()" style="width: fit-content;">Clean Caches Now</button>
+        </div>
+
+        <!-- 5. PRIVACY -->
+        <div class="view-content" id="view-4">
+            <div class="scan-title">Privacy Shield & Anti-Tracking</div>
+            <p style="color: var(--text-muted); margin-bottom: 15px;">Block tracking scripts and clear session identifiers.</p>
+            <button class="btn-action btn-blue" onclick="runPrivacy()" style="width: fit-content;">Erase Traces</button>
+        </div>
+
+        <!-- 6. TOOL BOX -->
+        <div class="view-content" id="view-5">
+            <div class="scan-title">Security Tool Box</div>
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <div class="tool-card-title">Network Firewall</div>
+                    <div class="tool-card-desc">Simulate port inspection and safety checks.</div>
+                    <button class="btn-action" onclick="alert('Network Firewall is secure.')">Run Check</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. ACCOUNT -->
+        <div class="view-content" id="view-6">
+            <div class="scan-title">Account & License Info</div>
+            <div class="content-panel" style="margin-top: 10px;">
+                <h3>Student Pro Web Edition</h3>
+                <p style="color: var(--text-muted); margin-top: 5px;">License Key: WEB-PRO-2026-X99 • Active</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(index, element) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            document.querySelectorAll('.view-content').forEach(view => view.classList.remove('active'));
+            document.getElementById(`view-${index}`).classList.add('active');
+        }
+
+        async function runFullCheck() {
+            let btn = document.getElementById('fullCheckActionBtn');
+            btn.style.display = 'none';
+            let pb = document.getElementById('fullProgressBar');
+            let path = document.getElementById('fullFilePath');
+            let count = document.getElementById('fullScannedCount');
+
+            for(let i=1; i<=10; i++) {
+                path.innerText = "Scanning web asset: /virtual/system/file_" + i;
+                count.innerText = i * 24;
+                pb.style.width = (i * 10) + "%";
+                if(i === 4) document.getElementById('fc-status-0').innerHTML = '<span class="status-finish">Secure ✓</span>';
+                if(i === 8) document.getElementById('fc-status-1').innerHTML = '<span class="status-finish">Optimized ✓</span>';
+                await new Promise(r => setTimeout(r, 150));
+            }
+            path.innerText = "Full Check Completed Successfully!";
+            btn.innerText = "Completed ✓";
+            btn.className = "btn-action btn-completed";
+            btn.style.display = 'block';
+        }
+
+        async function runVirusScan() {
+            let pb = document.getElementById('virusProgressBar');
+            let path = document.getElementById('virusFilePath');
+            path.innerText = "Analyzing heuristic signatures...";
+            pb.style.width = "50%";
+            await new Promise(r => setTimeout(r, 1000));
+            pb.style.width = "100%";
+            path.innerText = "Scan complete: Zero threats detected.";
+        }
+
+        async function runSpeedup() {
+            let pb = document.getElementById('speedupProgressBar');
+            pb.style.width = "100%";
+            alert("Performance successfully optimized!");
+        }
+
+        function runCleanup() {
+            alert("Local storage and caches cleaned successfully!");
+        }
+
+        function runPrivacy() {
+            alert("Privacy traces erased successfully!");
+        }
+    </script>
+</body>
+</html>
